@@ -29,7 +29,7 @@ import com.google.gdata.util.ServiceException;
  * You should have received a copy of the GNU General Public License along with
  * RonaiSync; If not, see http://www.gnu.org/licenses/.
  */
-public class SyncDown {
+public class Synchronizer {
 
 	private static final int       CONNECT_TIMEOUT = 1000 * 60; // In
 	// milliseconds
@@ -41,12 +41,14 @@ public class SyncDown {
 	private final String           baseDirectory;
 	private final SyncNotification syncNotification;
 	private boolean                cancel;
+	private SyncMode               syncMode;
 
-	public SyncDown(String baseDirectory, String user, String password, SyncNotification syncNotification) {
+	public Synchronizer(String baseDirectory, String user, String password, SyncNotification syncNotification, SyncMode syncMode) {
 		this.baseDirectory = baseDirectory;
 		this.user = user;
 		this.password = password;
 		this.syncNotification = syncNotification;
+		this.syncMode = syncMode;
 
 	}
 
@@ -103,18 +105,15 @@ public class SyncDown {
 
 				setFilesOnTheWeb.add(photoFile);
 
-				boolean doDownload = !photoFile.isFile();
+				boolean notExists = !photoFile.isFile();
+				boolean existsDifferentSize = photoEntry.hasSizeExt() && (photoEntry.getSize() != photoFile.length());
 
-				if (!doDownload) {
-					if (photoEntry.hasSizeExt() && (photoEntry.getSize() != photoFile.length())) {
-						doDownload = true;
+				if (syncMode == SyncMode.DOWNLOAD) {
+					if (notExists || existsDifferentSize) {
+						// photoEntry.getFeedLink().getHref();
+						String url = photoEntry.getMediaContents().get(0).getUrl();
+						downloadPhoto(new URL(url), photoFile);
 					}
-				}
-
-				if (doDownload) {
-					// photoEntry.getFeedLink().getHref();
-					String url = photoEntry.getMediaContents().get(0).getUrl();
-					downloadPhoto(new URL(url), photoFile);
 				}
 			}
 
