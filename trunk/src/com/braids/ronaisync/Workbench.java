@@ -48,7 +48,7 @@ public class Workbench {
 	private JProgressBar   prgAlbums;
 	private JProgressBar   prgPhotos;
 	private boolean        downloadInProgress;
-	private SyncDown       syncDown;
+	private Synchronizer       syncDown;
 
 	public Workbench() {
 
@@ -204,7 +204,7 @@ public class Workbench {
 				btnStartStop.setText("Cancel");
 				taFlow.setText("");
 
-				syncDown = new SyncDown(sfDirectory.getText(), sfUserName.getText(), new String(sfPassword.getPassword()), new Notif());
+				syncDown = new Synchronizer(sfDirectory.getText(), sfUserName.getText(), new String(sfPassword.getPassword()), new Notif(), SyncMode.DOWNLOAD);
 				syncDown.sync();
 				downloadInProgress = false;
 				taFlow.append("\nFinished!");
