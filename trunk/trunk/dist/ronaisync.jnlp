@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="http://code.google.com/p/ronaisync/source/browse/trunk/dist/ronaisync.jnlp">
+  <information>
+    <title>Rónai Sync</title>
+    <vendor>Braids</vendor>
+  </information>
+  <resources>
+    <!-- Application Resources -->
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="ronaisync.jar" main="true" />
+    <jar href="forms-1.2.1.jar"/>
+    <jar href="gdata-analytics-2.1.jar"/>
+    <jar href="gdata-analytics-meta-2.1.jar"/>
+    <jar href="gdata-appsforyourdomain-1.0.jar"/>
+    <jar href="gdata-appsforyourdomain-meta-1.0.jar"/>
+    <jar href="gdata-base-1.0.jar"/>
+    <jar href="gdata-blogger-2.0.jar"/>
+    <jar href="gdata-blogger-meta-2.0.jar"/>
+    <jar href="gdata-books-1.0.jar"/>
+    <jar href="gdata-books-meta-1.0.jar"/>
+    <jar href="gdata-calendar-2.0.jar"/>
+    <jar href="gdata-calendar-meta-2.0.jar"/>
+    <jar href="gdata-client-1.0.jar"/>
+    <jar href="gdata-client-meta-1.0.jar"/>
+    <jar href="gdata-codesearch-2.0.jar"/>
+    <jar href="gdata-codesearch-meta-2.0.jar"/>
+    <jar href="gdata-contacts-3.0.jar"/>
+    <jar href="gdata-contacts-meta-3.0.jar"/>
+    <jar href="gdata-core-1.0.jar"/>
+    <jar href="gdata-docs-3.0.jar"/>
+    <jar href="gdata-docs-meta-3.0.jar"/>
+    <jar href="gdata-finance-2.0.jar"/>
+    <jar href="gdata-finance-meta-2.0.jar"/>
+    <jar href="gdata-gtt-2.0.jar"/>
+    <jar href="gdata-gtt-meta-2.0.jar"/>
+    <jar href="gdata-health-2.0.jar"/>
+    <jar href="gdata-health-meta-2.0.jar"/>
+    <jar href="gdata-maps-2.0.jar"/>
+    <jar href="gdata-maps-meta-2.0.jar"/>
+    <jar href="gdata-media-1.0.jar"/>
+    <jar href="gdata-photos-2.0.jar"/>
+    <jar href="gdata-photos-meta-2.0.jar"/>
+    <jar href="gdata-projecthosting-2.1.jar"/>
+    <jar href="gdata-projecthosting-meta-2.1.jar"/>
+    <jar href="gdata-sidewiki-2.0.jar"/>
+    <jar href="gdata-sidewiki-meta-2.0.jar"/>
+    <jar href="gdata-sites-2.0.jar"/>
+    <jar href="gdata-sites-meta-2.0.jar"/>
+    <jar href="gdata-spreadsheet-3.0.jar"/>
+    <jar href="gdata-spreadsheet-meta-3.0.jar"/>
+    <jar href="gdata-webmastertools-2.0.jar"/>
+    <jar href="gdata-webmastertools-meta-2.0.jar"/>
+    <jar href="gdata-youtube-2.0.jar"/>
+    <jar href="gdata-youtube-meta-2.0.jar"/>
+    <jar href="google-collect-1.0-rc1.jar"/>
+    <jar href="jsr305.jar"/>
+    <jar href="mail-1.4.3-rc1.jar"/>
+
+  </resources>
+  <application-desc
+    name="Rónai Sync"
+    main-class="com.braids.ronaisync.Main"
+    width="300"
+    height="300">
+  </application-desc>
+  <update check="background"/>
+</jnlp>

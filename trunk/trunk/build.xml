@@ -3,6 +3,7 @@
 	<!-- set global properties for this build -->
 	<property name="src" location="src" />
 	<property name="build" location="build" />
+	<property name="data" location="data" />
 	<property name="dist" location="dist" />
 	<property name="lib" location="lib" />
 	<path id="compile.classpath">
@@ -55,6 +56,11 @@
 		<copy todir="${dist}">
 			<fileset dir="${lib}">
 				<include name="*.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${dist}">
+			<fileset dir="${data}">
+				<include name="*.jnlp" />
 			</fileset>
 		</copy>
 	</target>
