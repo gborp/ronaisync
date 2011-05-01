@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jnlp spec="1.0+" codebase="http://code.google.com/p/ronaisync/source/browse/trunk/dist/ronaisync.jnlp">
+<jnlp spec="1.0+" codebase="http://ronaisync.googlecode.com/svn/trunk/dist/ronaisync.jnlp">
   <information>
     <title>Rónai Sync</title>
     <vendor>Braids</vendor>
