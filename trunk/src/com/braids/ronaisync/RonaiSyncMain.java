@@ -1,6 +1,6 @@
 package com.braids.ronaisync;
 
-public class Main {
+public class RonaiSyncMain {
 
 	/**
 	 * RonaiSync is free software; you can redistribute it and/or modify it
@@ -18,7 +18,7 @@ public class Main {
 	 */
 	public static void main(String[] args) throws Exception {
 		// new SyncDown(args[0], args[1], args[2]).sync();
-		new Workbench();
+		new Workbench2();
 	}
 
 }
