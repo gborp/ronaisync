@@ -6,7 +6,7 @@ public class AlbumListItem implements ColoredListItem,
 		Comparable<AlbumListItem> {
 
 	public enum Type {
-		SERVER_ONLY, LOCAL_ONLY, BOTH_SIDE
+		BOTH_SIDE, SERVER_ONLY, LOCAL_ONLY
 	}
 
 	private boolean selected;
@@ -83,7 +83,21 @@ public class AlbumListItem implements ColoredListItem,
 	}
 
 	public int compareTo(AlbumListItem o) {
-
+		int cmpType = o.getType().compareTo(getType());
+		if (cmpType != 0) {
+			return cmpType;
+		}
 		return o.getName().compareTo(getName());
+	}
+
+	@Override
+	public String toString() {
+		switch (type) {
+		case LOCAL_ONLY:
+			return "[local] " + name;
+		case SERVER_ONLY:
+			return "[server] " + name;
+		}
+		return name;
 	}
 }

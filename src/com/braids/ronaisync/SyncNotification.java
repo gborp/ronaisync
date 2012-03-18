@@ -2,6 +2,8 @@ package com.braids.ronaisync;
 
 import java.util.List;
 
+import com.google.gdata.data.photos.AlbumEntry;
+
 /**
  * RonaiSync is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -22,5 +24,10 @@ public interface SyncNotification {
 	void startAlbumSync(String albumName, int albumIndex, int photoCount);
 
 	void startPhotoSync(String photoName, int photoIndex);
+
+	void webLocalAlbums(List<AlbumEntry> lstWebAlbums,
+			List<String> lstLocalAlbums);
+
+	void bandwidth(int bandwidth);
 
 }
