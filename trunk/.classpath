@@ -26,5 +26,16 @@
 	<classpathentry kind="lib" path="lib/mail-1.4.3-rc1.jar"/>
 	<classpathentry kind="lib" path="lib/forms-1.2.1.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="/usr/lib/java/swt-gtk-3.7.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/usr/lib/jni"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/org.eclipse.jface_3.7.0.I20110522-1430.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.jface.databinding_1.5.0.I20100907-0800.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.jface.text_3.7.1.r371_v20110825-0800.jar"/>
+	<classpathentry kind="lib" path="/usr/lib/eclipse/plugins/org.eclipse.equinox.common_3.6.0.dist.jar"/>
+	<classpathentry kind="lib" path="/usr/lib/eclipse/plugins/org.eclipse.core.commands_3.6.0.dist.jar"/>
+	<classpathentry kind="lib" path="swing2swt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
