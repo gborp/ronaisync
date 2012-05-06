@@ -38,7 +38,7 @@
 		</copy>
 
 		<!-- Compile the java code from ${src} into ${build} -->
-		<javac srcdir="${src}" destdir="${build}" debug="true" optimize="true">
+		<javac srcdir="${src}" destdir="${build}" debug="true" optimize="true" includeantruntime="false">
 			<classpath refid="compile.classpath" />
 		</javac>
 	</target>
