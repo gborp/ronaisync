@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import com.google.gdata.util.common.util.Base64DecoderException;
+
 /**
  * PagaVCS is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -58,7 +60,7 @@ public class SettingsStore {
 	}
 
 	public void load() throws BackingStoreException, GeneralSecurityException,
-			IOException {
+			IOException, Base64DecoderException {
 		userName = loadString(KEY_USERNAME);
 		password = loadString(KEY_PASSWORD);
 		directory = loadString(KEY_DIRECTORY);
@@ -92,7 +94,8 @@ public class SettingsStore {
 	}
 
 	private Map<String, String> loadMap(String mapName, boolean encoded)
-			throws BackingStoreException, GeneralSecurityException, IOException {
+			throws BackingStoreException, GeneralSecurityException,
+			IOException, Base64DecoderException {
 		Map<String, String> result = new HashMap<String, String>();
 		Preferences node = prefs.node(mapName);
 		for (String key : node.keys()) {
