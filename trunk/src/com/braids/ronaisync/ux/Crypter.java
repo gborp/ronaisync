@@ -9,8 +9,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
+import com.google.gdata.util.common.util.Base64;
+import com.google.gdata.util.common.util.Base64DecoderException;
 
 /**
  * PagaVCS is free software; you can redistribute it and/or modify it under the
@@ -58,11 +58,12 @@ public class Crypter {
 	}
 
 	private static String base64Encode(byte[] bytes) {
-		return new BASE64Encoder().encode(bytes);
+		return Base64.encode(bytes);
 	}
 
 	public static String decrypt(String property)
-			throws GeneralSecurityException, IOException {
+			throws GeneralSecurityException, IOException,
+			Base64DecoderException {
 		if (property == null) {
 			return property;
 		}
@@ -80,8 +81,9 @@ public class Crypter {
 		return new String(pbeCipher.doFinal(base64Decode(property)));
 	}
 
-	private static byte[] base64Decode(String property) throws IOException {
-		return new BASE64Decoder().decodeBuffer(property);
+	private static byte[] base64Decode(String property) throws IOException,
+			Base64DecoderException {
+		return Base64.decode(property.getBytes());
 	}
 
 }

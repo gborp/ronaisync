@@ -16,7 +16,7 @@
 	<target name="init">
 		<!-- Create the time stamp -->
 		<tstamp />
-		<mkdir dir="${build}" />		
+		<mkdir dir="${build}" />
 		<delete includeEmptyDirs="true">
 			<fileset dir="${build}" />
 		</delete>
@@ -45,24 +45,86 @@
 
 	<target name="dist" depends="compile" description="generate the distribution">
 		<!-- Create the distribution directory -->
-		
+
 		<jar destfile="${dist}/ronaisync.jar">
-			<zipfileset dir="${build}" prefix="" />		
+			<zipfileset dir="${build}" prefix="" />
 			<manifest>
-				<attribute name="Main-Class" value="com.braids.ronaisync.Main" />
+				<attribute name="Main-Class" value="com.braids.ronaisync.RonaiSyncMain" />
+				<attribute name="Class-Path" value="ronaisync.jar ronaisync-libs.jar" />
 			</manifest>
 		</jar>
 
-		<copy todir="${dist}">
-			<fileset dir="${lib}">
-				<include name="*.jar" />
-			</fileset>
-		</copy>
+		<jar destfile="${dist}/ronaisync-libs.jar" level="9">
+
+			<zipfileset src="${lib}/gdata-analytics-2.1.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-analytics-meta-2.1.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-appsforyourdomain-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-appsforyourdomain-meta-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-base-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-blogger-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-blogger-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-books-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-books-meta-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-calendar-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-calendar-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-client-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-client-meta-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-codesearch-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-codesearch-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-contacts-3.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-contacts-meta-3.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-core-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-docs-3.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-docs-meta-3.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-finance-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-finance-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-gtt-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-gtt-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-health-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-health-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-maps-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-maps-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-media-1.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-photos-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-photos-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-projecthosting-2.1.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-projecthosting-meta-2.1.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-sidewiki-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-sidewiki-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-sites-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-sites-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-spreadsheet-3.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-spreadsheet-meta-3.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-webmastertools-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-webmastertools-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-youtube-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/gdata-youtube-meta-2.0.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/google-collect-1.0-rc1.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/jsr305.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/log4j-1.2.16.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/mail-1.4.3-rc1.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/org.eclipse.core.commands_3.6.0.dist.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/org.eclipse.equinox.common_3.6.0.dist.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/org.eclipse.jface_3.7.0.I20110522-1430.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/org.eclipse.jface.databinding_1.5.0.I20100907-0800.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/org.eclipse.jface.text_3.7.1.r371_v20110825-0800.jar" excludes="META-INF/**" />
+			<zipfileset src="${lib}/swt-gtk-3.7.jar" excludes="META-INF/**" />
+			<manifest>
+			</manifest>
+		</jar>
+
+
 		<copy todir="${dist}">
 			<fileset dir="${data}">
 				<include name="*.jnlp" />
 			</fileset>
+			<fileset dir="${data}">
+				<include name="*.sh" />
+			</fileset>
 		</copy>
+
+		<chmod file="${dist}/ronaisync.jar" perm="+x" />
+		<chmod file="${dist}/startronaisync.sh" perm="+x" />
 	</target>
 
 	<target name="clean" description="clean up">

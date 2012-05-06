@@ -8,6 +8,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.braids.ronaisync.ux.Crypter;
 import com.braids.ronaisync.ux.GuiHelper;
+import com.google.gdata.util.common.util.Base64DecoderException;
 
 public class Manager {
 
@@ -39,7 +40,7 @@ public class Manager {
 	}
 
 	public void loadSettings() throws BackingStoreException,
-			GeneralSecurityException, IOException {
+			GeneralSecurityException, IOException, Base64DecoderException {
 		GuiHelper.getSettings().load();
 		username = nullSafe(Crypter.decrypt(GuiHelper.getSettings()
 				.getUserName()));
