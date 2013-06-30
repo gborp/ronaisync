@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
@@ -316,10 +317,19 @@ public class WorkbenchWindow extends ApplicationWindow {
 				try {
 					progressBarString = "refreshing";
 					syncer = new Synchronizer(directory, userName, password,
-							new Notif(), new GuiCallback(), SyncMode.DOWNLOAD);
+							new Notif(), new GuiCallback());
 					syncer.getWebAndLocalAlbums();
-				} catch (AuthenticationException e) {
+				} catch (final AuthenticationException e) {
 					e.printStackTrace();
+
+					getShell().getDisplay().asyncExec(new Runnable() {
+						public void run() {
+							AuthErrorDialog dlg = new AuthErrorDialog(
+									getShell(), "Error", e.getMessage());
+							dlg.open();
+						}
+					});
+
 				} catch (IOException e) {
 					e.printStackTrace();
 				} catch (ServiceException e) {
@@ -422,16 +432,23 @@ public class WorkbenchWindow extends ApplicationWindow {
 
 		@Override
 		public void bandwidth(int bandwidth) {
-			getShell().getDisplay().asyncExec(new Runnable() {
-				public void run() {
-					progressBar.setSelection(progressIndicator);
-					progressIndicator += 10;
-					if (progressIndicator > 90) {
-						progressIndicator = 10;
-					}
+			Shell shell = getShell();
+			if (shell != null) {
 
+				Display disp = shell.getDisplay();
+				if (disp != null) {
+					disp.asyncExec(new Runnable() {
+						public void run() {
+							progressBar.setSelection(progressIndicator);
+							progressIndicator += 10;
+							if (progressIndicator > 90) {
+								progressIndicator = 10;
+							}
+
+						}
+					});
 				}
-			});
+			}
 		}
 
 	}
@@ -452,6 +469,8 @@ public class WorkbenchWindow extends ApplicationWindow {
 
 	public static void errorDialogWithStackTrace(String title, String msg,
 			Throwable t) {
+
+		t.printStackTrace();
 
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);

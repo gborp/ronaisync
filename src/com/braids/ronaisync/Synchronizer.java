@@ -1,15 +1,21 @@
 package com.braids.ronaisync;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -43,6 +49,8 @@ public class Synchronizer {
 	// USEFUL!
 	// http://java2s.com/Open-Source/Java-Document-2/File/figoo/figoo/fileManager/FigooPicasaClient.java.htm
 
+	private static final String UTIL_FILE = ".ronay";
+
 	private static final int CONNECT_TIMEOUT = 1000 * 60; // In
 	// milliseconds
 	private static final int READ_TIMEOUT = 1000 * 60; // In
@@ -53,22 +61,21 @@ public class Synchronizer {
 	private final String baseDirectory;
 	private final SyncNotification syncNotification;
 	private boolean cancel;
-	private SyncMode syncMode;
 	private PicasawebService picasawebService;
 	private List<String> lstAlbumsToSync;
 	private int bandwidth;
 	private Timer timerBandwidth;
 	private final SyncGuiCallback guiCallback;
 
+	private boolean forceDownload;
+
 	public Synchronizer(String baseDirectory, String user, String password,
-			SyncNotification syncNotification, SyncGuiCallback guiCallback,
-			SyncMode syncMode) {
+			SyncNotification syncNotification, SyncGuiCallback guiCallback) {
 		this.baseDirectory = baseDirectory;
 		this.user = user;
 		this.password = password;
 		this.syncNotification = syncNotification;
 		this.guiCallback = guiCallback;
-		this.syncMode = syncMode;
 	}
 
 	public void setAlbumsToSync(List<String> lstAlbumsToSync) {
@@ -123,10 +130,88 @@ public class Synchronizer {
 		timerBandwidth = null;
 	}
 
+	private List<String> getAlreadyOnceDownloadedFiles(File dir) {
+		File file = new File(dir, UTIL_FILE);
+		ArrayList<String> result = new ArrayList<String>();
+		if (!file.isFile()) {
+			return result;
+		}
+		Scanner s = null;
+		try {
+			s = new Scanner(new FileInputStream(file), "utf-8");
+			while (s.hasNext()) {
+				String line = s.next();
+				result.add(line);
+				s.next();
+				s.next();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (s != null) {
+				s.close();
+			}
+		}
+		return result;
+	}
+
+	private List<Long> getAlreadyOnceDownloadedFileSizes(File dir) {
+		File file = new File(dir, UTIL_FILE);
+		ArrayList<Long> result = new ArrayList<Long>();
+		if (!file.isFile()) {
+			return result;
+		}
+		Scanner s = null;
+		try {
+			s = new Scanner(new FileInputStream(file), "utf-8");
+			while (s.hasNext()) {
+				s.next();
+				Long line = Long.valueOf(s.next());
+				result.add(line);
+				s.next();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (s != null) {
+				s.close();
+			}
+		}
+		return result;
+	}
+
+	private void addOnceSyncedFile(File dir, File photoFile) {
+		File file = new File(dir, UTIL_FILE);
+
+		BufferedWriter bw = null;
+
+		try {
+			bw = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(file, true), Charset.forName("utf-8")));
+			bw.write(photoFile.getName());
+			bw.newLine();
+			bw.write(Long.toString(photoFile.length()));
+			bw.newLine();
+			bw.write("--------");
+			bw.newLine();
+			bw.flush();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (bw != null) {
+				try {
+					bw.close();
+				} catch (IOException ex) {
+				}
+			}
+		}
+	}
+
 	// TODO handle mixed upload situation
 	public void sync() throws IOException, ServiceException {
 		startBandwidthMeter();
 		try {
+
 			PicasawebService picasaService = getPicasaService();
 
 			List<AlbumEntry> lstAlbum = getAlbumList(picasaService);
@@ -150,6 +235,7 @@ public class Synchronizer {
 						albumEntry = liAlbumEntry;
 					}
 				}
+
 				if (albumEntry == null) {
 					AlbumEntry album = new AlbumEntry();
 
@@ -164,6 +250,8 @@ public class Synchronizer {
 				}
 
 				File dir = new File(baseDirectory, albumName);
+
+				List<String> lstDownloadedOnce = getAlreadyOnceDownloadedFiles(dir);
 
 				if (dir.isFile()) {
 					throw new RuntimeException(
@@ -206,19 +294,28 @@ public class Synchronizer {
 					boolean existsDifferentSize = photoEntry.hasSizeExt()
 							&& (photoEntry.getSize() != photoFile.length());
 
-					if (syncMode == SyncMode.DOWNLOAD) {
+					if (!lstDownloadedOnce.contains(photoName) || forceDownload) {
 						if (notExists || existsDifferentSize) {
 							// photoEntry.getFeedLink().getHref();
 							String url = photoEntry.getMediaContents().get(0)
 									.getUrl();
 							downloadPhoto(new URL(url), photoFile);
+							if (photoFile.isFile()) {
+								addOnceSyncedFile(dir, photoFile);
+							}
 						}
 					}
 				}
 
 				ArrayList<File> setLocalFiles = new ArrayList<File>();
 				for (File f : dir.listFiles()) {
-					if (f.isFile()) {
+
+					String lcName = f.getName().toLowerCase();
+
+					if (f.isFile()
+							&& !f.getName().equals(UTIL_FILE)
+							&& (lcName.endsWith(".jpg") || lcName
+									.endsWith(".jpeg"))) {
 						setLocalFiles.add(f);
 					}
 				}
@@ -232,17 +329,28 @@ public class Synchronizer {
 				photoIndex = 0;
 				Collections.sort(setLocalFiles);
 				for (File f : setLocalFiles) {
-					syncNotification.startPhotoSync(f.getName(), photoIndex);
+					String photoName = f.getName();
+					syncNotification.startPhotoSync(photoName, photoIndex);
+					boolean error = false;
 					try {
 						addPhoto(picasaService, albumEntry, f);
 					} catch (Exception ex) {
-						if (!guiCallback.errorUploadingAPhoto(f, ex)) {
-							break;
-						}
+						error = true;
+						System.out
+								.println("Error uploading file: " + photoName);
+						// FIXME
+						// if (!guiCallback.errorUploadingAPhoto(f, ex)) {
+						// break;
+						// }
+					}
+					if (!error) {
+						addOnceSyncedFile(dir, f);
 					}
 
 					photoIndex++;
 				}
+
+				// TODO write syncedfiles
 			}
 		} finally {
 			stopBandwidthMeter();
