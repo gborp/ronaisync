@@ -1,29 +1,24 @@
 package com.braids.ronaisync;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import javax.activation.MimetypesFileTypeMap;
 
 import com.google.gdata.client.photos.PicasawebService;
 import com.google.gdata.data.PlainTextConstruct;
-import com.google.gdata.data.media.MediaFileSource;
 import com.google.gdata.data.photos.AlbumEntry;
 import com.google.gdata.data.photos.AlbumFeed;
 import com.google.gdata.data.photos.PhotoEntry;
@@ -49,12 +44,14 @@ public class Synchronizer {
 	// USEFUL!
 	// http://java2s.com/Open-Source/Java-Document-2/File/figoo/figoo/fileManager/FigooPicasaClient.java.htm
 
-	private static final String UTIL_FILE = ".ronay";
+	private static final String UTIL_FILE = ".rns-images";
 
 	private static final int CONNECT_TIMEOUT = 1000 * 60; // In
 	// milliseconds
 	private static final int READ_TIMEOUT = 1000 * 60; // In
 	// milliseconds
+
+	private List<String> lstExcludeAlbums = Arrays.asList("Auto Backup");
 
 	private final String user;
 	private final String password;
@@ -62,24 +59,15 @@ public class Synchronizer {
 	private final SyncNotification syncNotification;
 	private boolean cancel;
 	private PicasawebService picasawebService;
-	private List<String> lstAlbumsToSync;
-	private int bandwidth;
-	private Timer timerBandwidth;
-	private final SyncGuiCallback guiCallback;
 
 	private boolean forceDownload;
 
 	public Synchronizer(String baseDirectory, String user, String password,
-			SyncNotification syncNotification, SyncGuiCallback guiCallback) {
+			SyncNotification syncNotification) {
 		this.baseDirectory = baseDirectory;
 		this.user = user;
 		this.password = password;
 		this.syncNotification = syncNotification;
-		this.guiCallback = guiCallback;
-	}
-
-	public void setAlbumsToSync(List<String> lstAlbumsToSync) {
-		this.lstAlbumsToSync = lstAlbumsToSync;
 	}
 
 	public synchronized PicasawebService getPicasaService()
@@ -96,12 +84,7 @@ public class Synchronizer {
 
 	public void getWebAndLocalAlbums() throws AuthenticationException,
 			IOException, ServiceException {
-		startBandwidthMeter();
-		try {
-			syncNotification.webLocalAlbums(getWebAlbums(), getLocalAlbums());
-		} finally {
-			stopBandwidthMeter();
-		}
+		syncNotification.webLocalAlbums(getWebAlbums(), getLocalAlbums());
 	}
 
 	public List<AlbumEntry> getWebAlbums() throws AuthenticationException,
@@ -112,266 +95,106 @@ public class Synchronizer {
 		return lstResult;
 	}
 
-	private void startBandwidthMeter() {
-		bandwidth = 0;
-		timerBandwidth = new Timer("Bandwidth", true);
-		timerBandwidth.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				syncNotification.bandwidth(bandwidth);
-				bandwidth = 0;
-			}
+	public void sync() throws IOException, ServiceException {
 
-		}, 500, 1000);
-	}
+		PicasawebService picasaService = getPicasaService();
 
-	private void stopBandwidthMeter() {
-		timerBandwidth.cancel();
-		timerBandwidth = null;
-	}
+		List<AlbumEntry> lstAlbum = getAlbumList(picasaService);
 
-	private List<String> getAlreadyOnceDownloadedFiles(File dir) {
-		File file = new File(dir, UTIL_FILE);
-		ArrayList<String> result = new ArrayList<String>();
-		if (!file.isFile()) {
-			return result;
-		}
-		Scanner s = null;
-		try {
-			s = new Scanner(new FileInputStream(file), "utf-8");
-			while (s.hasNext()) {
-				String line = s.next();
-				result.add(line);
-				s.next();
-				s.next();
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} finally {
-			if (s != null) {
-				s.close();
+		List<String> lstAlbumsToSync = new ArrayList<String>();
+		for (AlbumEntry albumEntry : lstAlbum) {
+			String albumName = albumEntry.getTitle().getPlainText();
+			if (!lstExcludeAlbums.contains(albumName)) {
+				lstAlbumsToSync.add(albumName);
 			}
 		}
-		return result;
-	}
 
-	private List<Long> getAlreadyOnceDownloadedFileSizes(File dir) {
-		File file = new File(dir, UTIL_FILE);
-		ArrayList<Long> result = new ArrayList<Long>();
-		if (!file.isFile()) {
-			return result;
-		}
-		Scanner s = null;
-		try {
-			s = new Scanner(new FileInputStream(file), "utf-8");
-			while (s.hasNext()) {
-				s.next();
-				Long line = Long.valueOf(s.next());
-				result.add(line);
-				s.next();
+		syncNotification.albums(lstAlbumsToSync);
+		for (int albumIndex = 0; albumIndex < lstAlbumsToSync.size(); albumIndex++) {
+			if (cancel) {
+				return;
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} finally {
-			if (s != null) {
-				s.close();
-			}
-		}
-		return result;
-	}
-
-	private void addOnceSyncedFile(File dir, File photoFile) {
-		File file = new File(dir, UTIL_FILE);
-
-		BufferedWriter bw = null;
-
-		try {
-			bw = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(file, true), Charset.forName("utf-8")));
-			bw.write(photoFile.getName());
-			bw.newLine();
-			bw.write(Long.toString(photoFile.length()));
-			bw.newLine();
-			bw.write("--------");
-			bw.newLine();
-			bw.flush();
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (bw != null) {
-				try {
-					bw.close();
-				} catch (IOException ex) {
+			String albumName = lstAlbumsToSync.get(albumIndex);
+			AlbumEntry albumEntry = null;
+			for (AlbumEntry liAlbumEntry : lstAlbum) {
+				if (albumName.equals(liAlbumEntry.getTitle().getPlainText())) {
+					albumEntry = liAlbumEntry;
 				}
 			}
-		}
-	}
 
-	// TODO handle mixed upload situation
-	public void sync() throws IOException, ServiceException {
-		startBandwidthMeter();
-		try {
+			if (albumEntry == null) {
+				AlbumEntry album = new AlbumEntry();
 
-			PicasawebService picasaService = getPicasaService();
+				URL postUrl = new URL(
+						"http://picasaweb.google.com/data/feed/api/user/"
+								+ user);
 
-			List<AlbumEntry> lstAlbum = getAlbumList(picasaService);
+				album.setTitle(new PlainTextConstruct(albumName));
+				album.setDescription(new PlainTextConstruct(""));
 
-			// List<String> lstAlbumNames = new ArrayList<String>();
-			// for (AlbumEntry albumEntry : lstAlbum) {
-			// String albumName = albumEntry.getTitle().getPlainText();
-			// lstAlbumNames.add(albumName);
-			// }
+				albumEntry = picasaService.insert(postUrl, album);
+			}
 
-			syncNotification.albums(lstAlbumsToSync);
-			for (int albumIndex = 0; albumIndex < lstAlbumsToSync.size(); albumIndex++) {
+			File dir = new File(baseDirectory, albumName);
+
+			if (dir.isFile()) {
+				throw new RuntimeException(
+						"A file with the name "
+								+ dir.toString()
+								+ " already exists, but I need a directory with that name!");
+			}
+			if (!dir.isDirectory()) {
+				dir.mkdirs();
+			}
+
+			List<PhotoEntry> lstPhotos = getPhotos(picasaService, albumEntry);
+
+			syncNotification.startAlbumSync(albumName, albumIndex,
+					lstPhotos.size());
+
+			HashMap<String, FileSlot> mapLocalStoredFiles = getAlreadyOnceDownloadedFiles(dir);
+
+			int photoIndex = 0;
+			for (PhotoEntry photoEntry : lstPhotos) {
 				if (cancel) {
 					return;
 				}
-				String albumName = lstAlbumsToSync.get(albumIndex);
-				AlbumEntry albumEntry = null;
-				for (AlbumEntry liAlbumEntry : lstAlbum) {
-					if (albumName
-							.equals(liAlbumEntry.getTitle().getPlainText())) {
-						albumEntry = liAlbumEntry;
-					}
-				}
 
-				if (albumEntry == null) {
-					AlbumEntry album = new AlbumEntry();
+				String photoName = photoEntry.getTitle().getPlainText();
+				File photoFile = new File(dir, photoName);
 
-					URL postUrl = new URL(
-							"http://picasaweb.google.com/data/feed/api/user/"
-									+ user);
-
-					album.setTitle(new PlainTextConstruct(albumName));
-					album.setDescription(new PlainTextConstruct(""));
-
-					albumEntry = picasaService.insert(postUrl, album);
-				}
-
-				File dir = new File(baseDirectory, albumName);
-
-				List<String> lstDownloadedOnce = getAlreadyOnceDownloadedFiles(dir);
-
-				if (dir.isFile()) {
+				syncNotification.startPhotoSync(photoName, photoIndex);
+				photoIndex++;
+				if (photoFile.isDirectory()) {
 					throw new RuntimeException(
-							"A file with the name "
-									+ dir.toString()
-									+ " already exists, but I need a directory with that name!");
-				}
-				if (!dir.isDirectory()) {
-					dir.mkdirs();
+							"A directory with the name "
+									+ photoFile.toString()
+									+ " already exists, but I need a file with that name!");
 				}
 
-				HashSet<File> setFilesOnTheWeb = new HashSet<File>();
-				List<PhotoEntry> lstPhotos = getPhotos(picasaService,
-						albumEntry);
+				FileSlot fileSlot = mapLocalStoredFiles.get(photoName);
 
-				syncNotification.startAlbumSync(albumName, albumIndex,
-						lstPhotos.size());
+				boolean doDownload = !photoFile.isFile() || fileSlot == null;
 
-				int photoIndex = 0;
-				for (PhotoEntry photoEntry : lstPhotos) {
-					if (cancel) {
-						return;
-					}
-
-					String photoName = photoEntry.getTitle().getPlainText();
-					File photoFile = new File(dir, photoName);
-
-					syncNotification.startPhotoSync(photoName, photoIndex);
-					photoIndex++;
-					if (photoFile.isDirectory()) {
-						throw new RuntimeException(
-								"A directory with the name "
-										+ photoFile.toString()
-										+ " already exists, but I need a file with that name!");
-					}
-
-					setFilesOnTheWeb.add(photoFile);
-
-					boolean notExists = !photoFile.isFile();
-					boolean existsDifferentSize = photoEntry.hasSizeExt()
-							&& (photoEntry.getSize() != photoFile.length());
-
-					if (!lstDownloadedOnce.contains(photoName) || forceDownload) {
-						if (notExists || existsDifferentSize) {
-							// photoEntry.getFeedLink().getHref();
-							String url = photoEntry.getMediaContents().get(0)
-									.getUrl();
-							downloadPhoto(new URL(url), photoFile);
-							if (photoFile.isFile()) {
-								addOnceSyncedFile(dir, photoFile);
-							}
-						}
-					}
+				if (!doDownload) {
+					doDownload = fileSlot.date != photoEntry.getTimestamp()
+							.getTime();
 				}
 
-				ArrayList<File> setLocalFiles = new ArrayList<File>();
-				for (File f : dir.listFiles()) {
-
-					String lcName = f.getName().toLowerCase();
-
-					if (f.isFile()
-							&& !f.getName().equals(UTIL_FILE)
-							&& (lcName.endsWith(".jpg") || lcName
-									.endsWith(".jpeg"))) {
-						setLocalFiles.add(f);
+				if (doDownload) {
+					// photoEntry.getFeedLink().getHref();
+					String url = photoEntry.getMediaContents().get(0).getUrl();
+					downloadPhoto(new URL(url), photoFile);
+					if (photoFile.isFile()) {
+						addOnceSyncedFile(dir, photoFile, photoEntry
+								.getTimestamp().getTime());
 					}
 				}
-
-				setLocalFiles.removeAll(setFilesOnTheWeb);
-
-				// TODO ask the user whether upload or delete
-
-				syncNotification.startAlbumSync(albumName, albumIndex,
-						lstPhotos.size());
-				photoIndex = 0;
-				Collections.sort(setLocalFiles);
-				for (File f : setLocalFiles) {
-					String photoName = f.getName();
-					syncNotification.startPhotoSync(photoName, photoIndex);
-					boolean error = false;
-					try {
-						addPhoto(picasaService, albumEntry, f);
-					} catch (Exception ex) {
-						error = true;
-						System.out
-								.println("Error uploading file: " + photoName);
-						// FIXME
-						// if (!guiCallback.errorUploadingAPhoto(f, ex)) {
-						// break;
-						// }
-					}
-					if (!error) {
-						addOnceSyncedFile(dir, f);
-					}
-
-					photoIndex++;
-				}
-
-				// TODO write syncedfiles
 			}
-		} finally {
-			stopBandwidthMeter();
-		}
-	}
 
-	private synchronized void addPhoto(PicasawebService service,
-			AlbumEntry albumEntry, File file) throws MalformedURLException,
-			IOException, ServiceException {
-		String albumId = albumEntry.getGphotoId();
-		URL albumPostUrl = new URL(
-				"http://picasaweb.google.com/data/feed/api/user/" + user
-						+ "/albumid/" + albumId);
-		PhotoEntry photo = new PhotoEntry();
-		photo.setTitle(new PlainTextConstruct(file.getName()));
-		photo.setDescription(new PlainTextConstruct(""));
-		photo.setClient("Ronai Sync");
-		MediaFileSource myMedia = new MediaFileSource(file,
-				new MimetypesFileTypeMap().getContentType(file));
-		photo.setMediaSource(myMedia);
-		service.insert(albumPostUrl, photo);
+			syncNotification.endAlbumSync(albumName, albumIndex);
+		}
+
 	}
 
 	private List<AlbumEntry> getAlbumList(PicasawebService picasaService)
@@ -414,7 +237,6 @@ public class Synchronizer {
 					int bytesRead;
 					while (!cancel && (bytesRead = input.read(buffer)) > 0) {
 						output.write(buffer, 0, bytesRead);
-						bandwidth += bytesRead;
 					}
 					output.close();
 				} finally {
@@ -426,7 +248,6 @@ public class Synchronizer {
 			}
 			succesful = true;
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		} finally {
 			if (!succesful) {
@@ -462,4 +283,91 @@ public class Synchronizer {
 		return result;
 	}
 
+	private static class FileSlot {
+		String name;
+		long size;
+		long date;
+	}
+
+	private HashMap<String, FileSlot> getAlreadyOnceDownloadedFiles(File dir) {
+		HashMap<String, FileSlot> result = new HashMap<String, FileSlot>();
+		File file = new File(dir, UTIL_FILE);
+		if (!file.isFile()) {
+			return result;
+		}
+		List<FileSlot> lstSlot = new ArrayList<FileSlot>();
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+
+			while (true) {
+				FileSlot slot = new FileSlot();
+				slot.name = reader.readLine();
+				if (slot.name == null) {
+					break;
+				}
+				slot.size = Long.valueOf(reader.readLine());
+				slot.date = Long.valueOf(reader.readLine());
+				reader.readLine();
+				lstSlot.add(slot);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		HashSet<String> fileNames = new HashSet<String>();
+
+		for (int i = 0; i < lstSlot.size(); i++) {
+			FileSlot slot = lstSlot.get(i);
+			if (fileNames.contains(slot.name)) {
+				result.remove(slot.name);
+				i++;
+			} else {
+				fileNames.add(slot.name);
+			}
+		}
+
+		for (FileSlot slot : lstSlot) {
+			result.put(slot.name, slot);
+		}
+
+		return result;
+	}
+
+	private void addOnceSyncedFile(File dir, File photoFile, long timestamp) {
+		File file = new File(dir, UTIL_FILE);
+
+		BufferedWriter bw = null;
+
+		try {
+			bw = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(file, true), Charset.forName("utf-8")));
+			bw.write(photoFile.getName());
+			bw.newLine();
+			bw.write(Long.toString(photoFile.length()));
+			bw.newLine();
+			bw.write(Long.toString(timestamp));
+			bw.newLine();
+			bw.write("--------");
+			bw.newLine();
+			bw.flush();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (bw != null) {
+				try {
+					bw.close();
+				} catch (IOException ex) {
+				}
+			}
+		}
+	}
 }
