@@ -16,7 +16,25 @@ package com.braids.ronaisync;
 public class RonaiSyncMain {
 
 	public static void main(String[] args) throws Exception {
-		new Manager().start();
+
+		String baseDirectory = args[0];
+		String user = args[1];
+		String password = args[2];
+		GnomeSyncNotification callback = new GnomeSyncNotification();
+		new Synchronizer(baseDirectory, user, password, callback).sync();
+
+		//
+		// public boolean isGnome() {
+		// String var = System.getenv(GNOME_ENV_VAR);
+		//
+		// return var != null && !var.trim().equals("");
+		// }
+		//
+		// public boolean isXfce() {
+		// String var = System.getenv(XFCE_ENV_VAR);
+		//
+		// return var != null && var.trim().equals("xfce-");
+		// }
 	}
 
 }

@@ -23,11 +23,11 @@ public interface SyncNotification {
 
 	void startAlbumSync(String albumName, int albumIndex, int photoCount);
 
+	void endAlbumSync(String albumName, int albumIndex);
+
 	void startPhotoSync(String photoName, int photoIndex);
 
 	void webLocalAlbums(List<AlbumEntry> lstWebAlbums,
 			List<String> lstLocalAlbums);
-
-	void bandwidth(int bandwidth);
 
 }
