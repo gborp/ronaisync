@@ -20,8 +20,10 @@ public class RonaiSyncMain {
 		String baseDirectory = args[0];
 		String user = args[1];
 		String password = args[2];
+		String verbose = args[3];
 		GnomeSyncNotification callback = new GnomeSyncNotification();
-		new Synchronizer(baseDirectory, user, password, callback).sync();
+		new Synchronizer(baseDirectory, user, password,
+				"verbose".equalsIgnoreCase(verbose), callback).sync();
 
 		//
 		// public boolean isGnome() {
