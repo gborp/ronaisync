@@ -62,12 +62,15 @@ public class Synchronizer {
 
 	private boolean forceDownload;
 
+	private boolean verbose;
+
 	public Synchronizer(String baseDirectory, String user, String password,
-			SyncNotification syncNotification) {
+			boolean verbose, SyncNotification syncNotification) {
 		this.baseDirectory = baseDirectory;
 		this.user = user;
 		this.password = password;
 		this.syncNotification = syncNotification;
+		this.verbose = verbose;
 	}
 
 	public synchronized PicasawebService getPicasaService()
