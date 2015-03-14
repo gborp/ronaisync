@@ -1,0 +1,1 @@
+GUI for handling Picasa folders
